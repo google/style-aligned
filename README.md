@@ -1,7 +1,7 @@
 # Style Aligned Image Generation via Shared Attention
 
 
-### [Project Page](https://style-aligned-gen.github.io)
+### [Project Page](https://style-aligned-gen.github.io) &ensp; [Paper](https://style-aligned-gen.github.io/data/StyleAligned.pdf)
 
 
 ## Setup
@@ -22,6 +22,12 @@ This code was tested with Python 3.11, [Pytorch 2.1](https://pytorch.org/)  and 
 -  [**style_aligned_w_multidiffusion**][multidiffusion] can be used for generating style aligned panoramas using [SD V2](https://huggingface.co/stabilityai/stable-diffusion-2) with [MultiDiffusion](https://multidiffusion.github.io/).
 
 ![alt text](doc/md_example.jpg)
+
+## TODOs
+- [ ] Adding demo.
+- [ ] StyleAligned from an input image.
+- [ ] Multi-style with MultiDiffusion.
+- [ ] StyleAligned with DreamBooth
 
 ## Disclaimer
 This is not an officially supported Google product.
