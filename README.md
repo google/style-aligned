@@ -25,7 +25,7 @@ This code was tested with Python 3.11, [Pytorch 2.1](https://pytorch.org/)  and 
 
 ## TODOs
 - [ ] Adding demo.
-- [ ] StyleAligned from an input image.
+- [x] StyleAligned from an input image.
 - [ ] Multi-style with MultiDiffusion.
 - [ ] StyleAligned with DreamBooth
 
