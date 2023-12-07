@@ -13,6 +13,9 @@ This code was tested with Python 3.11, [Pytorch 2.1](https://pytorch.org/)  and 
 
 ![alt text](doc/sa_example.jpg)
 
+- See [**style_aligned_transfer_sdxl**][style_aligned_transfer] notebook for generating images with a style from reference image using [SDXL](https://huggingface.co/docs/diffusers/using-diffusers/sdxl).
+
+![alt text](doc/sa_transfer_example.jpeg)
 
 - See [**style_aligned_w_controlnet**][controlnet] notebook for generating style aligned and depth conditioned images using SDXL with [ControlNet-Depth](https://arxiv.org/abs/2302.05543).
 
@@ -35,3 +38,4 @@ This is not an officially supported Google product.
 [style_aligned]: style_aligned_sdxl.ipynb
 [controlnet]: style_aligned_w_controlnet.ipynb
 [multidiffusion]: style_aligned_w_multidiffusion.ipynb
+[style_aligned_transfer]: style_aligned_transfer_sdxl.ipynb
