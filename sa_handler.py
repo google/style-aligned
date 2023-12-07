@@ -35,11 +35,12 @@ class StyleAlignedArgs:
     adain_keys: bool = True
     adain_values: bool = False
     full_attention_share: bool = False
-    keys_scale: float = 1.
+    shared_score_scale: float = 1.
+    shared_score_shift: float = 0.
     only_self_level: float = 0.
 
 
-def expand_first(feat: T, scale=1., ) -> T:
+def expand_first(feat: T, scale=1.,) -> T:
     b = feat.shape[0]
     feat_style = torch.stack((feat[0], feat[b // 2])).unsqueeze(1)
     if scale == 1:
@@ -82,6 +83,12 @@ class DefaultAttentionProcessor(nn.Module):
 
 
 class SharedAttentionProcessor(DefaultAttentionProcessor):
+
+    def shifted_scaled_dot_product_attention(self, attn: attention_processor.Attention, query: T, key: T, value: T) -> T:
+        logits = torch.einsum('bhqd,bhkd->bhqk', query, key) * attn.scale
+        logits[:, :, :, query.shape[2]:] += self.shared_score_shift
+        probs = logits.softmax(-1)
+        return torch.einsum('bhqk,bhkd->bhqd', probs, value)
 
     def shared_call(
             self,
@@ -127,11 +134,14 @@ class SharedAttentionProcessor(DefaultAttentionProcessor):
         if self.adain_values:
             value = adain(value)
         if self.share_attention:
-            key = concat_first(key, -2, scale=self.keys_scale)
+            key = concat_first(key, -2, scale=self.shared_score_scale)
             value = concat_first(value, -2)
-            hidden_states = nnf.scaled_dot_product_attention(
-                query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
-            )
+            if self.shared_score_shift != 0:
+                hidden_states = self.shifted_scaled_dot_product_attention(attn, query, key, value,)
+            else:
+                hidden_states = nnf.scaled_dot_product_attention(
+                    query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
+                )
         else:
             hidden_states = nnf.scaled_dot_product_attention(
                 query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
@@ -174,7 +184,8 @@ class SharedAttentionProcessor(DefaultAttentionProcessor):
         self.adain_keys = style_aligned_args.adain_keys
         self.adain_values = style_aligned_args.adain_values
         self.full_attention_share = style_aligned_args.full_attention_share
-        self.keys_scale = style_aligned_args.keys_scale
+        self.shared_score_scale = style_aligned_args.shared_score_scale
+        self.shared_score_shift = style_aligned_args.shared_score_shift
 
 
 def _get_switch_vec(total_num_layers, level):
@@ -211,7 +222,6 @@ def init_attention_processors(pipeline: StableDiffusionXLPipeline, style_aligned
                 attn_procs[name] = DefaultAttentionProcessor()
             else:
                 attn_procs[name] = SharedAttentionProcessor(style_aligned_args)
-
         else:
             number_of_cross += 1
             attn_procs[name] = DefaultAttentionProcessor()
