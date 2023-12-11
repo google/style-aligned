@@ -26,18 +26,20 @@ sa_args = sa_handler.StyleAlignedArgs(share_group_norm=False,
 handler.register(sa_args, )
 
 # Define the function to generate style-aligned images
-def style_aligned_sdxl(initial_prompt1, initial_prompt2, initial_prompt3, initial_prompt4, initial_prompt5, style_prompt): 
+def style_aligned_sdxl(initial_prompt1, initial_prompt2, initial_prompt3, initial_prompt4,
+                       initial_prompt5, style_prompt, seed):
     try:
         # Combine the style prompt with each initial prompt
+        gen = None if seed is None else torch.manual_seed(int(seed))
         sets_of_prompts = [ prompt + ". " + style_prompt for prompt in [initial_prompt1, initial_prompt2, initial_prompt3, initial_prompt4, initial_prompt5,]]
         # Generate images using the pipeline
-        images = pipeline(sets_of_prompts,).images
+        images = pipeline(sets_of_prompts, generator=gen).images
         return images
     except Exception as e:
         raise gr.Error(f"Error in generating images: {e}")
 
 with gr.Blocks() as demo:
-    gr.HTML('<h1 style="text-align: center;">Style-aligned SDXL</h1>')
+    gr.HTML('<h1 style="text-align: center;">StyleAligned SDXL</h1>')
     with gr.Group():
       with gr.Column():
         with gr.Accordion(label='Enter upto 5 different initial prompts', open=True):
@@ -51,14 +53,19 @@ with gr.Blocks() as demo:
         with gr.Row():
           # Textbox for the style prompt
           style_prompt = gr.Textbox(label="Enter a style prompt", placeholder='macro photo, 3d game asset')
+          seed = gr.Number(value=1234, label="Seed", precision=0, step=1,
+                           info="Enter a seed of a previous run "
+                                "or leave empty for a random generation.")
         # Button to generate images
         btn = gr.Button("Generate a set of Style-aligned SDXL images",)
     # Display the generated images
-    output = gr.Gallery(label="Style-Aligned SDXL Images", elem_id="gallery",columns=5, rows=1, object_fit="contain", height="auto",)
+    output = gr.Gallery(label="Style aligned text-to-image on SDXL ", elem_id="gallery",columns=5, rows=1,
+                        object_fit="contain", height="auto",)
 
     # Button click event
     btn.click(fn=style_aligned_sdxl, 
-              inputs=[initial_prompt1, initial_prompt2, initial_prompt3, initial_prompt4, initial_prompt5, style_prompt], 
+              inputs=[initial_prompt1, initial_prompt2, initial_prompt3, initial_prompt4, initial_prompt5,
+                      style_prompt, seed],
               outputs=output, 
               api_name="style_aligned_sdxl")
 

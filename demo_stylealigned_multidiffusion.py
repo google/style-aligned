@@ -27,10 +27,11 @@ handler.register(sa_args)
 
 
 # Define the function to run MultiDiffusion with StyleAligned
-def style_aligned_multidiff(ref_style_prompt, img_generation_prompt):
+def style_aligned_multidiff(ref_style_prompt, img_generation_prompt, seed):
     try:
         view_batch_size = 25  # adjust according to VRAM size
-        reference_latent = torch.randn(1, 4, 64, 64,)
+        gen = None if seed is None else torch.manual_seed(int(seed))
+        reference_latent = torch.randn(1, 4, 64, 64, generator=gen)
         images = pipeline_calls.panorama_call(pipeline,
                                               [ref_style_prompt, img_generation_prompt],
                                               reference_latent=reference_latent,
@@ -42,7 +43,7 @@ def style_aligned_multidiff(ref_style_prompt, img_generation_prompt):
 
 # Create a Gradio UI
 with gr.Blocks() as demo:
-    gr.HTML('<h1 style="text-align: center;">Style-aligned with MultiDiffusion</h1>')
+    gr.HTML('<h1 style="text-align: center;">MultiDiffusion with StyleAligned </h1>')
     with gr.Row():
       with gr.Column(variant='panel'):
         # Textbox for reference style prompt
@@ -51,8 +52,12 @@ with gr.Blocks() as demo:
           info='Enter a Prompt to generate the reference image',
           placeholder='A poster in a papercut art style.'
         )
+        seed = gr.Number(value=1234, label="Seed", precision=0, step=1,
+                         info="Enter a seed of a previous reference image "
+                              "or leave empty for a random generation.")
         # Image display for the reference style image
         ref_style_image = gr.Image(visible=False, label='Reference style image')
+
 
       with gr.Column(variant='panel'):
         # Textbox for prompt for MultiDiffusion panoramas
@@ -63,9 +68,9 @@ with gr.Blocks() as demo:
           )
 
     # Button to trigger image generation
-    btn = gr.Button('Style-aligned MultiDiffusion - Generate', size='sm')
+    btn = gr.Button('Style Aligned MultiDiffusion - Generate', size='sm')
     # Gallery to display generated style image and the panorama
-    gallery = gr.Gallery(label='Style-Aligned ControlNet - Generated images',
+    gallery = gr.Gallery(label='StyleAligned MultiDiffusion - generated images',
                            elem_id='gallery',
                            columns=5,
                            rows=1,
@@ -76,8 +81,8 @@ with gr.Blocks() as demo:
                           )
     # Button click event
     btn.click(fn=style_aligned_multidiff,
-              inputs=[ref_style_prompt, img_generation_prompt],
-              outputs=[gallery, ref_style_image],
+              inputs=[ref_style_prompt, img_generation_prompt, seed],
+              outputs=[gallery, ref_style_image,],
               api_name='style_aligned_multidiffusion')
 
     # Example inputs for the Gradio demo
@@ -86,7 +91,7 @@ with gr.Blocks() as demo:
         ['A poster in a papercut art style.', 'A village in a papercut art style.'],
         ['A poster in a papercut art style.', 'Futuristic cityscape in a papercut art style.'],
         ['A poster in a papercut art style.', 'A jungle in a papercut art style.'],
-        ['A poster in a flat design style.', 'Girrafes in a flat design style.'],
+        ['A poster in a flat design style.', 'Giraffes in a flat design style.'],
         ['A poster in a flat design style.', 'Houses in a flat design style.'],
         ['A poster in a flat design style.', 'Mountains in a flat design style.'],
       ],

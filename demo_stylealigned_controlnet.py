@@ -44,7 +44,7 @@ handler.register(sa_args, )
 
 
 # Function to run ControlNet depth with StyleAligned
-def style_aligned_controlnet(ref_style_prompt, depth_map, ref_image, img_generation_prompt):
+def style_aligned_controlnet(ref_style_prompt, depth_map, ref_image, img_generation_prompt, seed):
     try:
         if depth_map == True:
             image = load_image(ref_image)
@@ -52,22 +52,23 @@ def style_aligned_controlnet(ref_style_prompt, depth_map, ref_image, img_generat
         else:
             depth_image = load_image(ref_image).resize((1024, 1024))
         controlnet_conditioning_scale = 0.8
-        num_images_per_prompt = 3 # adjust according to VRAM size
-        latents = torch.randn(1 + num_images_per_prompt, 4, 128, 128).to(pipeline.unet.dtype)
-        latents[1:] = torch.randn(num_images_per_prompt, 4, 128, 128).to(pipeline.unet.dtype)
+        gen = None if seed is None else torch.manual_seed(int(seed))
+        num_images_per_prompt = 3  # adjust according to VRAM size
+        latents = torch.randn(1 + num_images_per_prompt, 4, 128, 128, generator=gen).to(pipeline.unet.dtype)
+
         images = pipeline_calls.controlnet_call(pipeline, [ref_style_prompt, img_generation_prompt],
                                                 image=depth_image,
                                                 num_inference_steps=50,
                                                 controlnet_conditioning_scale=controlnet_conditioning_scale,
                                                 num_images_per_prompt=num_images_per_prompt,
                                                 latents=latents)
-        return [images[0], depth_image] +  images[1:], gr.Image(value=images[0], visible=True)
+        return [images[0], depth_image] + images[1:], gr.Image(value=images[0], visible=True)
     except Exception as e:
         raise gr.Error(f"Error in generating images:{e}")
 
 # Create a Gradio UI
 with gr.Blocks() as demo:
-    gr.HTML('<h1 style="text-align: center;">Style-aligned with ControlNet Depth</h1>')
+    gr.HTML('<h1 style="text-align: center;">ControlNet with StyleAligned</h1>')
     with gr.Row():
       
       with gr.Column(variant='panel'):
@@ -76,20 +77,26 @@ with gr.Blocks() as demo:
           label='Reference style prompt',
           info="Enter a Prompt to generate the reference image", placeholder='a poster in <style name> style'
         )
+        with gr.Row(variant='panel'):
         # Checkbox for using controller depth-map
-        depth_map = gr.Checkbox(label='Depth-map',)
+            depth_map = gr.Checkbox(label='Depth-map',)
+            seed = gr.Number(value=1234, label="Seed", precision=0, step=1, scale=3,
+                                    info="Enter a seed of a previous reference image "
+                                         "or leave empty for a random generation.")
         # Image display for the generated reference style image
-        ref_style_image = gr.Image(visible=False, label='Reference style image')
-      
+        ref_style_image = gr.Image(visible=False, label='Reference style image', scale=1)
+
+
       with gr.Column(variant='panel'): 
         # Image upload option for uploading a reference image for controlnet
         ref_image = gr.Image(label="Upload the reference image", 
                              type='filepath' )
         # Textbox for ControlNet prompt
         img_generation_prompt = gr.Textbox(
-            label='ControlNet Prompt',
-            info="Enter a Prompt to generate images using ControlNet and Style-aligned", 
+            label='Generation Prompt',
+            info="Enter a Prompt to generate images using ControlNet and StyleAligned",
             )
+
     # Button to trigger image generation
     btn = gr.Button("Generate", size='sm')
     # Gallery to display generated images
@@ -102,7 +109,7 @@ with gr.Blocks() as demo:
                           )
       
     btn.click(fn=style_aligned_controlnet, 
-              inputs=[ref_style_prompt, depth_map, ref_image, img_generation_prompt], 
+              inputs=[ref_style_prompt, depth_map, ref_image, img_generation_prompt, seed],
               outputs=[gallery, ref_style_image], 
               api_name="style_aligned_controlnet")
 
@@ -110,14 +117,20 @@ with gr.Blocks() as demo:
     # Example inputs for the Gradio interface
     gr.Examples(
       examples=[
-        ['A poster in a papercut art style.', False, 'example_image/A.png', 'Letter A in a papercut art style.'],
-        ['A couple sitting a wooden bench, in colorful clay animation, claymation style.', True, 'example_image/train.jpg', 'A train in colorful clay animation, claymation style.'],
-        ['A couple sitting a wooden bench, in clay animation, claymation style.', True, 'example_image/sun.png', 'Sun in clay animation, claymation style.'],
-        ['A bull in a low-poly, colorful origami style.', True, 'example_image/whale.png', 'A whale in a low-poly, colorful origami style.'],
-        ['A house in a painterly, digital illustration style.', True, 'example_image/camel.jpg', 'A camel in a painterly, digital illustration style.'],
-        ['An image in ancient egyptian art style, hieroglyphics style.', True, 'example_image/whale.png', 'A whale in ancient egyptian art style, hieroglyphics style.'],
+        ['A couple sitting a wooden bench, in colorful clay animation, claymation style.', True,
+         'example_image/train.png', 'A train in colorful clay animation, claymation style.',],
+        ['A couple sitting a wooden bench, in colorful clay animation, claymation style.', False,
+         'example_image/sun.png', 'Sun in colorful clay animation, claymation style.',],
+        ['A poster in a papercut art style.', False,
+         'example_image/A.png', 'Letter A in a papercut art style.', None],
+        ['A bull in a low-poly, colorful origami style.', True, 'example_image/whale.png',
+         'A whale in a low-poly, colorful origami style.', None],
+        ['An image in ancient egyptian art style, hieroglyphics style.', True, 'example_image/camel.png',
+         'A camel in a painterly, digital illustration style.',],
+        ['An image in ancient egyptian art style, hieroglyphics style.', True, 'example_image/whale.png',
+         'A whale in ancient egyptian art style, hieroglyphics style.',],
       ],
-      inputs=[ref_style_prompt, depth_map, ref_image, img_generation_prompt], 
+      inputs=[ref_style_prompt, depth_map, ref_image, img_generation_prompt,],
       outputs=[gallery, ref_style_image], 
       fn=style_aligned_controlnet,
       )
