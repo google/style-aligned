@@ -26,8 +26,19 @@ This code was tested with Python 3.11, [Pytorch 2.1](https://pytorch.org/)  and 
 
 ![alt text](doc/md_example.jpg)
 
+## Demos
+Thanks to @yvrjsharma for preparing the demos: [**style aligned text to image**][style_aligned_demo],  [**ControlNet + StyleAligned**][controlnet_demo] and  [**MultiDiffusion + StyleAligned**][controlnet_demo]
+
+To start a demo locally, simply run
+```
+python <demo file name>.py  
+```
+and enter the demo in your browser using the provided url.
+
+An online demo of ControlNet + StyleAligned is available [here](https://huggingface.co/spaces/ysharma/style-aligned-controlnet).
+
 ## TODOs
-- [ ] Adding demo.
+- [x] Adding demo.
 - [x] StyleAligned from an input image.
 - [ ] Multi-style with MultiDiffusion.
 - [ ] StyleAligned with DreamBooth
@@ -39,3 +50,6 @@ This is not an officially supported Google product.
 [controlnet]: style_aligned_w_controlnet.ipynb
 [multidiffusion]: style_aligned_w_multidiffusion.ipynb
 [style_aligned_transfer]: style_aligned_transfer_sdxl.ipynb
+[style_aligned_demo]: demo_stylealigned_sdxl.py
+[controlnet_demo]: demo_stylealigned_controlnet.py
+[multidiffusion_demo]: demo_stylealigned_multidiffusion.py

@@ -31,7 +31,7 @@ def style_aligned_sdxl(initial_prompt1, initial_prompt2, initial_prompt3, initia
     try:
         # Combine the style prompt with each initial prompt
         gen = None if seed is None else torch.manual_seed(int(seed))
-        sets_of_prompts = [ prompt + ". " + style_prompt for prompt in [initial_prompt1, initial_prompt2, initial_prompt3, initial_prompt4, initial_prompt5,]]
+        sets_of_prompts = [prompt + " in the style of " + style_prompt for prompt in [initial_prompt1, initial_prompt2, initial_prompt3, initial_prompt4, initial_prompt5] if prompt]
         # Generate images using the pipeline
         images = pipeline(sets_of_prompts, generator=gen).images
         return images
@@ -52,8 +52,8 @@ with gr.Blocks() as demo:
             initial_prompt5 = gr.Textbox(label='Initial prompt 5', value='', show_label=False, container=False, placeholder='a toy boat')
         with gr.Row():
           # Textbox for the style prompt
-          style_prompt = gr.Textbox(label="Enter a style prompt", placeholder='macro photo, 3d game asset')
-          seed = gr.Number(value=1234, label="Seed", precision=0, step=1,
+          style_prompt = gr.Textbox(label="Enter a style prompt", placeholder='macro photo, 3d game asset', scale=3)
+          seed = gr.Number(value=1234, label="Seed", precision=0, step=1, scale=1,
                            info="Enter a seed of a previous run "
                                 "or leave empty for a random generation.")
         # Button to generate images
