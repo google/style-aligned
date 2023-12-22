@@ -26,7 +26,7 @@ from PIL import Image
 import copy
 
 T = torch.Tensor
-TN = T | None
+TN = T 
 
 
 def get_depth_map(image: Image, feature_processor: DPTImageProcessor, depth_estimator: DPTForDepthEstimation) -> Image:
