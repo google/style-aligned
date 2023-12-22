@@ -22,7 +22,7 @@ import numpy as np
 
 
 T = torch.Tensor
-TN = T | None
+TN = T 
 InversionCallback = Callable[[StableDiffusionXLPipeline, int, T, dict[str, T]], dict[str, T]]
 
 
